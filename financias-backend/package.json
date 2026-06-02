@@ -1,0 +1,48 @@
+{
+  "name": "financias-backend",
+  "version": "1.0.0",
+  "description": "Backend Api do Financias",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsup",
+    "start": "node dist/server.js",
+    "test": "jest"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@fastify/cors": "^11.2.0",
+    "@fastify/error": "^4.2.0",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.3.0",
+    "@fastify/sensible": "^6.0.4",
+    "@fastify/swagger": "^9.7.0",
+    "@fastify/swagger-ui": "^5.2.6",
+    "async-sema": "^3.1.1",
+    "axios": "^1.16.1",
+    "better-sqlite3": "^12.10.0",
+    "cheerio": "^1.2.0",
+    "date-fns": "^4.4.0",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.8.5",
+    "fastify-plugin": "^5.1.0",
+    "fastify-type-provider-zod": "^6.1.0",
+    "iconv-lite": "^0.7.2",
+    "knex": "^3.2.10",
+    "knex-paginate": "^3.2.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.9.1",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}
