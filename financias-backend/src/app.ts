@@ -9,6 +9,7 @@ import { fastify } from 'fastify'
 import { jsonSchemaTransform, serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod'
 
 import { env } from '@/env'
+import { logger } from '@/libs/logger'
 import { InstrumentedSema } from '@/libs/sema'
 import { databasePlugin } from '@/plugins/database.plugin'
 import { errorHandlerPlugin } from '@/plugins/error-handler.plugin'
@@ -17,7 +18,7 @@ import { routes } from '@/router'
 const isProd = env.NODE_ENV === 'production'
 
 export class App {
-	public readonly server = fastify({ logger: !isProd, trustProxy: isProd }).withTypeProvider<ZodTypeProvider>()
+	public readonly server = fastify({ loggerInstance: logger, trustProxy: isProd }).withTypeProvider<ZodTypeProvider>()
 	private sema = new InstrumentedSema(200)
 
 	constructor() {

@@ -38,7 +38,12 @@
       "Bash(curl -s \"http://localhost:3000/api/fiis/paginado\")",
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('perPage',d['perPage'],'len',len\\(d['data']\\)\\)\")",
       "Bash(Get-ChildItem -Path \"d:\\\\financias\\\\financias-backend\\\\src\\\\modules\\\\fiis\" -Recurse -Filter \"*.ts\")",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "Bash(ls src/plugins src/libs)",
+      "Bash(cat .env)",
+      "Bash(cat .env.example)",
+      "Bash(tee -a .env)",
+      "Bash(NODE_ENV=development LOG_LEVEL=debug npx tsx _test_log.ts)"
     ]
   }
 }

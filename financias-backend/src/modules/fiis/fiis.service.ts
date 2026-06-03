@@ -1,8 +1,11 @@
 import createError from '@fastify/error'
 import type { Knex } from 'knex'
+import { criarLogger } from '@/libs/logger'
 import { getFiiDataStatusInvest } from '@/libs/statusInvest'
 import { type DadosFii, FiisDAO } from '@/modules/fiis/fiis.dao'
 import type { Fii } from '@/modules/fiis/fiis.schema'
+
+const log = criarLogger({ modulo: 'fiis' })
 
 const FiiJaCadastradaError = createError('FII_JA_CADASTRADA', 'A FII %s já está cadastrada', 400)
 const FiiNaoEncontradaError = createError('FII_NAO_ENCONTRADA', '%s', 404)
@@ -24,7 +27,9 @@ export class FiisService {
 		if (existente) throw new FiiJaCadastradaError(ticker)
 
 		const dados = await this.coletarDados(ticker)
-		return FiisDAO.inserir({ trx, ticker, quantidadeCotas: props.quantidadeCotas, dados })
+		const fii = await FiisDAO.inserir({ trx, ticker, quantidadeCotas: props.quantidadeCotas, dados })
+		log.info({ ticker, cotacao: fii.cotacao, dyAnual: fii.dyAnual, quantidadeCotas: fii.quantidadeCotas }, 'FII cadastrada')
+		return fii
 	}
 
 	async atualizar(trx: Knex): Promise<{ atualizadas: number; falhas: Array<{ ticker: string; motivo: string }>; fiis: Fii[] }> {
@@ -32,15 +37,21 @@ export class FiisService {
 		const falhas: Array<{ ticker: string; motivo: string }> = []
 		let atualizadas = 0
 
+		log.info({ total: fiis.length }, 'Iniciando atualização de todas as FIIs')
+
 		for (const fii of fiis) {
 			try {
 				const dados = await this.coletarDados(fii.ticker)
 				await FiisDAO.atualizarDados({ trx, id: fii.id, dados })
 				atualizadas++
 			} catch (error) {
-				falhas.push({ ticker: fii.ticker, motivo: error instanceof Error ? error.message : 'Erro desconhecido' })
+				const motivo = error instanceof Error ? error.message : 'Erro desconhecido'
+				log.warn({ ticker: fii.ticker, motivo }, 'Falha ao atualizar FII')
+				falhas.push({ ticker: fii.ticker, motivo })
 			}
 		}
+
+		log.info({ atualizadas, falhas: falhas.length }, 'Atualização concluída')
 
 		const lista = await FiisDAO.listar({ trx })
 		return { atualizadas, falhas, fiis: lista }

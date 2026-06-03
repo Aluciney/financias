@@ -1,4 +1,5 @@
 import { App } from '@/app'
+import { logger } from '@/libs/logger'
 
 async function bootstrap() {
 	try {
@@ -6,7 +7,7 @@ async function bootstrap() {
 		await app.ready()
 		await app.listen()
 	} catch (error) {
-		console.error(error)
+		logger.fatal({ err: error }, 'Falha ao iniciar a aplicação')
 		process.exit(1)
 	}
 }

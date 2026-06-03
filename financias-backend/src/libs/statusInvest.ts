@@ -1,6 +1,9 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
 import * as iconv from 'iconv-lite'
+import { criarLogger } from '@/libs/logger'
+
+const log = criarLogger({ modulo: 'statusInvest' })
 
 export interface ProximoPagamento {
 	valor: number
@@ -103,6 +106,9 @@ export async function getFiiDataStatusInvest(ticker: string): Promise<FiiData> {
 
 	const dyMensal = cotacao > 0 ? (proximoPagamento.valor / cotacao) * 100 : 0
 	const dyAnual = dyMensal * 12
+
+	log.debug({ ticker: ativo.code, categoria, url, cotacao, temProvento }, 'Dados coletados do StatusInvest')
+	if (!temProvento) log.warn({ ticker: ativo.code, categoria }, 'Ativo sem provento identificável')
 
 	return {
 		ticker: ativo.code?.toUpperCase() || ticker,
