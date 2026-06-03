@@ -6,6 +6,7 @@ import type { Fii } from '@/modules/fiis/fiis.schema'
 
 const FiiJaCadastradaError = createError('FII_JA_CADASTRADA', 'A FII %s já está cadastrada', 400)
 const FiiNaoEncontradaError = createError('FII_NAO_ENCONTRADA', '%s', 404)
+const EtfNaoSuportadoError = createError('ETF_NAO_SUPORTADO', 'ETFs não são suportados: não distribuem proventos (%s)', 400)
 
 export class FiisService {
 	async listar(trx: Knex): Promise<Fii[]> {
@@ -64,22 +65,26 @@ export class FiisService {
 
 	// Faz o scraping no StatusInvest e valida o resultado
 	private async coletarDados(ticker: string): Promise<DadosFii> {
+		let data: Awaited<ReturnType<typeof getFiiDataStatusInvest>>
 		try {
-			const data = await getFiiDataStatusInvest(ticker)
-			if (!data.cotacao) throw new Error('Não foi possível obter a cotação')
-
-			return {
-				nome: data.nome,
-				cotacao: data.cotacao,
-				dividendo: data.proximoPagamento.valor,
-				dataCom: data.proximoPagamento.dataCom,
-				dataPagamento: data.proximoPagamento.dataPagamento,
-				dyMensal: data.dyMensal,
-				dyAnual: data.dyAnual,
-			}
+			data = await getFiiDataStatusInvest(ticker)
 		} catch (error) {
 			const motivo = error instanceof Error ? error.message : 'falha ao consultar o StatusInvest'
 			throw new FiiNaoEncontradaError(`Não foi possível obter os dados de ${ticker}: ${motivo}`)
+		}
+
+		// ETFs não distribuem proventos (acumulam), então não fazem sentido no acompanhamento por DY
+		if (data.categoria === 'etfs') throw new EtfNaoSuportadoError(ticker)
+		if (!data.cotacao) throw new FiiNaoEncontradaError(`Não foi possível obter a cotação de ${ticker}`)
+
+		return {
+			nome: data.nome,
+			cotacao: data.cotacao,
+			dividendo: data.proximoPagamento.valor,
+			dataCom: data.proximoPagamento.dataCom,
+			dataPagamento: data.proximoPagamento.dataPagamento,
+			dyMensal: data.dyMensal,
+			dyAnual: data.dyAnual,
 		}
 	}
 }

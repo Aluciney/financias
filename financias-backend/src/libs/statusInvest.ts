@@ -11,6 +11,8 @@ export interface ProximoPagamento {
 export interface FiiData {
 	ticker: string
 	nome: string
+	// categoria do ativo conforme o caminho da página (ex.: 'fundos-imobiliarios', 'fiagros', 'acoes', 'etfs')
+	categoria: string
 	cotacao: number
 	proximoPagamento: ProximoPagamento
 	// dividend yield mensal (%) calculado a partir do último provento / cotação
@@ -68,6 +70,8 @@ export async function getFiiDataStatusInvest(ticker: string): Promise<FiiData> {
 	// usa o caminho retornado pela busca, já apontando para a página do tipo correto
 	const caminho = ativo.url.startsWith('/') ? ativo.url : `/${ativo.url}`
 	const url = `https://statusinvest.com.br${caminho}`
+	// primeiro segmento do caminho identifica a categoria (ex.: 'etfs', 'fundos-imobiliarios')
+	const categoria = caminho.split('/').filter(Boolean)[0] ?? 'outro'
 
 	const response = await axios.get(url, {
 		responseType: 'arraybuffer',
@@ -103,6 +107,7 @@ export async function getFiiDataStatusInvest(ticker: string): Promise<FiiData> {
 	return {
 		ticker: ativo.code?.toUpperCase() || ticker,
 		nome,
+		categoria,
 		cotacao,
 		proximoPagamento,
 		dyMensal: Number(dyMensal.toFixed(2)),
