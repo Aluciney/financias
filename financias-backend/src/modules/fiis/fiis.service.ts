@@ -12,18 +12,18 @@ export class FiisService {
 		return FiisDAO.listar({ trx })
 	}
 
-	async listarPaginado(trx: Knex, props: { page: number; perPage: number }) {
-		return FiisDAO.listarPaginado({ trx, page: props.page, perPage: props.perPage })
+	async listarPaginado(trx: Knex, props: { page: number; perPage: number; busca?: string }) {
+		return FiisDAO.listarPaginado({ trx, page: props.page, perPage: props.perPage, busca: props.busca })
 	}
 
-	async cadastrar(trx: Knex, props: { ticker: string }): Promise<Fii> {
+	async cadastrar(trx: Knex, props: { ticker: string; quantidadeCotas: number }): Promise<Fii> {
 		const ticker = props.ticker.toUpperCase()
 
 		const existente = await FiisDAO.buscarPorTicker({ trx, ticker })
 		if (existente) throw new FiiJaCadastradaError(ticker)
 
 		const dados = await this.coletarDados(ticker)
-		return FiisDAO.inserir({ trx, ticker, dados })
+		return FiisDAO.inserir({ trx, ticker, quantidadeCotas: props.quantidadeCotas, dados })
 	}
 
 	async atualizar(trx: Knex): Promise<{ atualizadas: number; falhas: Array<{ ticker: string; motivo: string }>; fiis: Fii[] }> {
@@ -43,6 +43,16 @@ export class FiisService {
 
 		const lista = await FiisDAO.listar({ trx })
 		return { atualizadas, falhas, fiis: lista }
+	}
+
+	async atualizarCotas(trx: Knex, props: { id: number; quantidadeCotas: number }): Promise<Fii> {
+		const existente = await FiisDAO.buscarPorId({ trx, id: props.id })
+		if (!existente) throw new FiiNaoEncontradaError('FII não encontrada')
+
+		await FiisDAO.atualizarCotas({ trx, id: props.id, quantidadeCotas: props.quantidadeCotas })
+
+		const atualizada = await FiisDAO.buscarPorId({ trx, id: props.id })
+		return atualizada as Fii
 	}
 
 	async remover(trx: Knex, props: { id: number }): Promise<{ id: number }> {

@@ -10,6 +10,7 @@ const fii = z.object({
 	dataPagamento: z.string(),
 	dyMensal: z.number(),
 	dyAnual: z.number(),
+	quantidadeCotas: z.number(),
 	atualizadoEm: z.string().nullable(),
 	criadoEm: z.string(),
 })
@@ -30,6 +31,7 @@ export const FiisSchema = {
 		Query: z.object({
 			page: z.coerce.number().int().positive().default(1),
 			perPage: z.coerce.number().int().positive().max(100).default(10),
+			busca: z.string().trim().optional(),
 		}),
 		Response: {
 			200: z.object({
@@ -48,6 +50,7 @@ export const FiisSchema = {
 				.trim()
 				.min(1, 'Informe o ticker da FII')
 				.transform((value) => value.toUpperCase()),
+			quantidadeCotas: z.coerce.number().int('Informe um número inteiro de cotas').min(0, 'A quantidade de cotas não pode ser negativa').default(0),
 		}),
 		Response: {
 			201: fii,
@@ -62,6 +65,18 @@ export const FiisSchema = {
 				falhas: z.array(z.object({ ticker: z.string(), motivo: z.string() })),
 				fiis: z.array(fii),
 			}),
+		},
+	},
+	atualizarCotas: {
+		Params: z.object({
+			id: z.coerce.number(),
+		}),
+		Body: z.object({
+			quantidadeCotas: z.coerce.number().int('Informe um número inteiro de cotas').min(0, 'A quantidade de cotas não pode ser negativa'),
+		}),
+		Response: {
+			200: fii,
+			404: erro,
 		},
 	},
 	remover: {
@@ -80,6 +95,7 @@ export type FiisSchemaType = {
 	listarPaginado: InferModuleSchema<typeof FiisSchema.listarPaginado>
 	cadastrar: InferModuleSchema<typeof FiisSchema.cadastrar>
 	atualizar: InferModuleSchema<typeof FiisSchema.atualizar>
+	atualizarCotas: InferModuleSchema<typeof FiisSchema.atualizarCotas>
 	remover: InferModuleSchema<typeof FiisSchema.remover>
 }
 

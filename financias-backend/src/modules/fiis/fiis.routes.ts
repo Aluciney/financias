@@ -43,6 +43,17 @@ export const fiisRoutes = (app: FastifyTypedInstance) => {
 		handler: fiisController.atualizar.bind(fiisController),
 	})
 
+	app.patch('/:id/cotas', {
+		schema: {
+			tags: ['fiis'],
+			summary: 'Atualiza a quantidade de cotas de uma FII cadastrada',
+			params: FiisSchema.atualizarCotas.Params,
+			body: FiisSchema.atualizarCotas.Body,
+			response: FiisSchema.atualizarCotas.Response,
+		},
+		handler: fiisController.atualizarCotas.bind(fiisController),
+	})
+
 	app.delete('/:id', {
 		schema: {
 			tags: ['fiis'],

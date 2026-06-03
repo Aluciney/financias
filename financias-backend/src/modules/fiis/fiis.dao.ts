@@ -11,6 +11,7 @@ interface FiiRow {
 	data_pagamento: string
 	dy_mensal: number
 	dy_anual: number
+	quantidade_cotas: number
 	atualizado_em: string | null
 	criado_em: string
 }
@@ -35,6 +36,7 @@ const mapRow = (row: FiiRow): Fii => ({
 	dataPagamento: row.data_pagamento,
 	dyMensal: row.dy_mensal,
 	dyAnual: row.dy_anual,
+	quantidadeCotas: row.quantidade_cotas,
 	atualizadoEm: row.atualizado_em,
 	criadoEm: row.criado_em,
 })
@@ -47,8 +49,17 @@ export const FiisDAO = {
 	},
 
 	// Mesma ordenação, porém paginada no banco via knex-paginate
-	listarPaginado: async (props: { trx: Knex; page: number; perPage: number }) => {
-		const resultado = await props.trx<FiiRow>('fiis').select('*').orderBy('dy_anual', 'desc').paginate({ perPage: props.perPage, currentPage: props.page, isLengthAware: true })
+	listarPaginado: async (props: { trx: Knex; page: number; perPage: number; busca?: string }) => {
+		const query = props.trx<FiiRow>('fiis').select('*').orderBy('dy_anual', 'desc')
+
+		if (props.busca) {
+			const termo = `%${props.busca.toLowerCase()}%`
+			query.where((builder) => {
+				builder.whereRaw('lower(ticker) like ?', [termo]).orWhereRaw('lower(nome) like ?', [termo])
+			})
+		}
+
+		const resultado = await query.paginate({ perPage: props.perPage, currentPage: props.page, isLengthAware: true })
 
 		return {
 			data: resultado.data.map(mapRow),
@@ -69,7 +80,7 @@ export const FiisDAO = {
 		return row ? mapRow(row) : undefined
 	},
 
-	inserir: async (props: { trx: Knex; ticker: string; dados: DadosFii }): Promise<Fii> => {
+	inserir: async (props: { trx: Knex; ticker: string; quantidadeCotas: number; dados: DadosFii }): Promise<Fii> => {
 		const [id] = await props.trx('fiis').insert({
 			ticker: props.ticker,
 			nome: props.dados.nome,
@@ -79,6 +90,7 @@ export const FiisDAO = {
 			data_pagamento: props.dados.dataPagamento,
 			dy_mensal: props.dados.dyMensal,
 			dy_anual: props.dados.dyAnual,
+			quantidade_cotas: props.quantidadeCotas,
 			atualizado_em: props.trx.fn.now(),
 		})
 
@@ -99,6 +111,10 @@ export const FiisDAO = {
 				dy_anual: props.dados.dyAnual,
 				atualizado_em: props.trx.fn.now(),
 			})
+	},
+
+	atualizarCotas: async (props: { trx: Knex; id: number; quantidadeCotas: number }): Promise<void> => {
+		await props.trx('fiis').where({ id: props.id }).update({ quantidade_cotas: props.quantidadeCotas })
 	},
 
 	remover: async (props: { trx: Knex; id: number }): Promise<number> => {

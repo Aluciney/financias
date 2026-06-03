@@ -60,7 +60,7 @@ export class App {
 		this.server.register(fastifyCors, {
 			origin: ['*'],
 			credentials: false,
-			methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+			methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 		})
 	}
 

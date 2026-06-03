@@ -8,6 +8,7 @@ interface Fii {
   dataPagamento: string
   dyMensal: number
   dyAnual: number
+  quantidadeCotas: number
   atualizadoEm: string | null
   criadoEm: string
 }

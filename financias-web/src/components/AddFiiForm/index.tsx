@@ -12,6 +12,10 @@ const schema = z.object({
     .min(4, 'Ticker inválido')
     .regex(/^[A-Za-z]{4}11$/, 'Use o formato do ticker, ex.: MXRF11')
     .transform((valor) => valor.toUpperCase()),
+  quantidadeCotas: z
+    .number({ error: 'Informe a quantidade de cotas' })
+    .int('Informe um número inteiro de cotas')
+    .min(0, 'A quantidade não pode ser negativa'),
 })
 
 type FormData = z.infer<typeof schema>
@@ -25,10 +29,10 @@ export const AddFiiForm: React.FC<AddFiiFormProps> = ({ onCadastrar }) => {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) })
 
-  const enviar = handleSubmit(async ({ ticker }) => {
+  const enviar = handleSubmit(async ({ ticker, quantidadeCotas }) => {
     setErroApi(null)
     try {
-      await onCadastrar(ticker)
+      await onCadastrar(ticker, quantidadeCotas)
       reset()
     } catch (e) {
       const apiErro = e as { response?: { data?: { message?: string } } }
@@ -48,6 +52,17 @@ export const AddFiiForm: React.FC<AddFiiFormProps> = ({ onCadastrar }) => {
           autoComplete="off"
           className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-4 py-2.5 text-sm text-zinc-100 uppercase placeholder:text-zinc-600 focus:border-violet-500 focus:outline-none"
         />
+        <input
+          {...register('quantidadeCotas', { valueAsNumber: true })}
+          type="number"
+          min={0}
+          step={1}
+          defaultValue={0}
+          placeholder="Cotas"
+          autoComplete="off"
+          aria-label="Quantidade de cotas"
+          className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-violet-500 focus:outline-none sm:w-40 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+        />
         <button
           type="submit"
           disabled={isSubmitting}
@@ -57,8 +72,11 @@ export const AddFiiForm: React.FC<AddFiiFormProps> = ({ onCadastrar }) => {
           Cadastrar
         </button>
       </div>
+      <p className="mt-2 text-xs text-zinc-500">Informe quantas cotas você possui (use 0 caso ainda não tenha nenhuma)</p>
 
-      {(errors.ticker || erroApi) && <p className="mt-2 text-sm text-rose-400">{errors.ticker?.message ?? erroApi}</p>}
+      {(errors.ticker || errors.quantidadeCotas || erroApi) && (
+        <p className="mt-2 text-sm text-rose-400">{errors.ticker?.message ?? errors.quantidadeCotas?.message ?? erroApi}</p>
+      )}
     </form>
   )
 }

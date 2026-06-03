@@ -24,6 +24,7 @@ const fiiExemplo = {
 	dataPagamento: '15/06/2026',
 	dyMensal: 1,
 	dyAnual: 12,
+	quantidadeCotas: 100,
 	atualizadoEm: '2026-06-02 12:00:00',
 	criadoEm: '2026-06-02 12:00:00',
 }

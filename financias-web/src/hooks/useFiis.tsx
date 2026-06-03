@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { atualizarFiis, cadastrarFii, listarFiis, removerFii } from '../services/fiis'
+import { atualizarCotasFii, atualizarFiis, cadastrarFii, listarFiis, removerFii } from '../services/fiis'
 
 interface ErroApi {
   response?: { data?: { message?: string } }
@@ -32,8 +32,8 @@ export const useFiis = () => {
     carregar()
   }, [carregar])
 
-  const cadastrar = useCallback(async (ticker: string) => {
-    const nova = await cadastrarFii(ticker)
+  const cadastrar = useCallback(async (ticker: string, quantidadeCotas: number) => {
+    const nova = await cadastrarFii(ticker, quantidadeCotas)
     setFiis((atual) => [...atual, nova].sort((a, b) => b.dyAnual - a.dyAnual))
     return nova
   }, [])
@@ -53,10 +53,16 @@ export const useFiis = () => {
     }
   }, [])
 
+  const atualizarCotas = useCallback(async (id: number, quantidadeCotas: number) => {
+    const atualizada = await atualizarCotasFii(id, quantidadeCotas)
+    setFiis((atual) => atual.map((fii) => (fii.id === id ? atualizada : fii)))
+    return atualizada
+  }, [])
+
   const remover = useCallback(async (id: number) => {
     await removerFii(id)
     setFiis((atual) => atual.filter((fii) => fii.id !== id))
   }, [])
 
-  return { fiis, carregando, atualizando, erro, carregar, cadastrar, atualizarTodas, remover }
+  return { fiis, carregando, atualizando, erro, carregar, cadastrar, atualizarTodas, atualizarCotas, remover }
 }

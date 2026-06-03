@@ -1,3 +1,3 @@
 export interface AddFiiFormProps {
-  onCadastrar: (ticker: string) => Promise<void>
+  onCadastrar: (ticker: string, quantidadeCotas: number) => Promise<void>
 }

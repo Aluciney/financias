@@ -5,13 +5,18 @@ export const listarFiis = async (): Promise<Fii[]> => {
   return data
 }
 
-export const listarFiisPaginado = async (page: number, perPage: number): Promise<PaginaFiis> => {
-  const { data } = await api.get<PaginaFiis>('/fiis/paginado', { params: { page, perPage } })
+export const listarFiisPaginado = async (page: number, perPage: number, busca?: string): Promise<PaginaFiis> => {
+  const { data } = await api.get<PaginaFiis>('/fiis/paginado', { params: { page, perPage, busca: busca || undefined } })
   return data
 }
 
-export const cadastrarFii = async (ticker: string): Promise<Fii> => {
-  const { data } = await api.post<Fii>('/fiis', { ticker })
+export const cadastrarFii = async (ticker: string, quantidadeCotas: number): Promise<Fii> => {
+  const { data } = await api.post<Fii>('/fiis', { ticker, quantidadeCotas })
+  return data
+}
+
+export const atualizarCotasFii = async (id: number, quantidadeCotas: number): Promise<Fii> => {
+  const { data } = await api.patch<Fii>(`/fiis/${id}/cotas`, { quantidadeCotas })
   return data
 }
 

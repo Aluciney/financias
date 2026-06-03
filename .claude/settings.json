@@ -36,7 +36,9 @@
       "Bash(curl -s \"http://localhost:3000/api/fiis/paginado?page=1\")",
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('total',d['total'],'lastPage',d['lastPage'],'perPage',d['perPage'],'len',len\\(d['data']\\)\\)\")",
       "Bash(curl -s \"http://localhost:3000/api/fiis/paginado\")",
-      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('perPage',d['perPage'],'len',len\\(d['data']\\)\\)\")"
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('perPage',d['perPage'],'len',len\\(d['data']\\)\\)\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\financias\\\\financias-backend\\\\src\\\\modules\\\\fiis\" -Recurse -Filter \"*.ts\")",
+      "Bash(Select-Object FullName)"
     ]
   }
 }

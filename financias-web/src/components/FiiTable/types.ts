@@ -9,6 +9,7 @@ export interface FiiTablePaginacao {
 export interface FiiTableProps {
   fiis: Fii[]
   onRemover: (id: number) => Promise<void>
+  onAtualizarCotas: (id: number, quantidadeCotas: number) => Promise<void>
   offset?: number
   paginacao?: FiiTablePaginacao
 }

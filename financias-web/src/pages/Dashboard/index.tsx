@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import { Activity, Layers, Loader2, Percent, RefreshCw, Trophy } from 'lucide-react'
+import { Activity, Layers, Loader2, Percent, RefreshCw, Search, Trophy } from 'lucide-react'
 import { useState } from 'react'
 import { AddFiiForm } from '../../components/AddFiiForm'
 import { FiiTable } from '../../components/FiiTable'
@@ -11,8 +11,8 @@ import { useFiisPaginadas } from '../../hooks/useFiisPaginadas'
 import { formatarMoeda, formatarPercentual } from '../../services/format'
 
 export const Dashboard: React.FC = () => {
-  const { fiis, carregando, atualizando, erro, cadastrar, atualizarTodas, remover } = useFiis()
-  const tabela = useFiisPaginadas(10)
+  const { fiis, carregando, atualizando, erro, cadastrar, atualizarTodas, atualizarCotas, remover } = useFiis()
+  const tabela = useFiisPaginadas(5)
   const [feedback, setFeedback] = useState<string | null>(null)
 
   const melhor = fiis[0]
@@ -69,7 +69,7 @@ export const Dashboard: React.FC = () => {
         </section>
 
         <section className="mt-6">
-          <AddFiiForm onCadastrar={async (ticker) => { await cadastrar(ticker); await tabela.recarregar() }} />
+          <AddFiiForm onCadastrar={async (ticker, quantidadeCotas) => { await cadastrar(ticker, quantidadeCotas); await tabela.recarregar() }} />
         </section>
 
         {carregando ? (
@@ -92,18 +92,39 @@ export const Dashboard: React.FC = () => {
             </section>
 
             <section className="mt-6">
-              <FiiTable
-                fiis={tabela.dados}
-                onRemover={async (id) => { await remover(id); await tabela.recarregar() }}
-                offset={(tabela.pagina - 1) * tabela.perPage}
-                paginacao={{
-                  pagina: tabela.pagina,
-                  lastPage: tabela.lastPage,
-                  total: tabela.total,
-                  perPage: tabela.perPage,
-                  onPagina: tabela.setPagina,
-                }}
-              />
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-sm font-medium text-zinc-300">FIIs cadastradas</h2>
+                <div className="relative w-full sm:max-w-xs">
+                  <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                  <input
+                    value={tabela.busca}
+                    onChange={(e) => tabela.setBusca(e.target.value)}
+                    placeholder="Buscar por ticker ou nome"
+                    autoComplete="off"
+                    className="w-full rounded-xl border border-zinc-700 bg-zinc-950/60 py-2 pr-3 pl-9 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-violet-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {tabela.dados.length === 0 && tabela.busca ? (
+                <div className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/30 px-6 py-12 text-center text-sm text-zinc-400">
+                  Nenhuma FII encontrada para "{tabela.busca}"
+                </div>
+              ) : (
+                <FiiTable
+                  fiis={tabela.dados}
+                  onRemover={async (id) => { await remover(id); await tabela.recarregar() }}
+                  onAtualizarCotas={async (id, quantidade) => { await atualizarCotas(id, quantidade); await tabela.recarregar() }}
+                  offset={(tabela.pagina - 1) * tabela.perPage}
+                  paginacao={{
+                    pagina: tabela.pagina,
+                    lastPage: tabela.lastPage,
+                    total: tabela.total,
+                    perPage: tabela.perPage,
+                    onPagina: tabela.setPagina,
+                  }}
+                />
+              )}
             </section>
           </>
         )}

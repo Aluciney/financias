@@ -8,6 +8,7 @@ type ListarRequest = FiisSchemaType['listar']
 type ListarPaginadoRequest = FiisSchemaType['listarPaginado']
 type CadastrarRequest = FiisSchemaType['cadastrar']
 type AtualizarRequest = FiisSchemaType['atualizar']
+type AtualizarCotasRequest = FiisSchemaType['atualizarCotas']
 type RemoverRequest = FiisSchemaType['remover']
 
 export class FiisController {
@@ -35,6 +36,13 @@ export class FiisController {
 	async atualizar(request: TypedRequest<AtualizarRequest>, reply: TypedReply<AtualizarRequest>) {
 		const trx = request.server.trx
 		const resultado = await fiisService.atualizar(trx)
+
+		return reply.status(200).send(resultado)
+	}
+
+	async atualizarCotas(request: TypedRequest<AtualizarCotasRequest>, reply: TypedReply<AtualizarCotasRequest>) {
+		const trx = request.server.trx
+		const resultado = await fiisService.atualizarCotas(trx, { id: request.params.id, quantidadeCotas: request.body.quantidadeCotas })
 
 		return reply.status(200).send(resultado)
 	}

@@ -24,9 +24,50 @@ const parseNumero = (texto: string) => {
 	return Number.isFinite(valor) ? valor : 0
 }
 
+export interface TypeFII {
+	id: number,
+	parentId: number,
+	nameFormated: string;
+	name: string;
+	normalizedName: string;
+	code: string;
+	price: string;
+	variation: string;
+	variationUp: boolean;
+	type: number;
+	url: string;
+}
+
+// Consulta a busca do StatusInvest para descobrir o ativo e, principalmente, o caminho
+// correto da página conforme o tipo (FII, Fiagro, FI-Infra, ação...).
+export async function getTipoFII(ticker: string): Promise<TypeFII> {
+	const url = `https://statusinvest.com.br/home/mainsearchquery?q=${encodeURIComponent(ticker)}`
+	const { data } = await axios.get<TypeFII[]>(url, {
+		headers: {
+			'User-Agent': 'Mozilla/5.0',
+			Accept: 'application/json',
+		},
+	})
+
+	if (!Array.isArray(data) || data.length === 0) {
+		throw new Error('Ativo não encontrado')
+	}
+
+	// a busca devolve vários resultados; prioriza o de código idêntico ao ticker informado
+	const ativo = data.find((item) => item.code?.toUpperCase() === ticker)
+	if (!ativo) {
+		throw new Error('Ativo não encontrado')
+	}
+
+	return ativo
+}
+
 export async function getFiiDataStatusInvest(ticker: string): Promise<FiiData> {
-	ticker = ticker.toUpperCase()
-	const url = `https://statusinvest.com.br/fundos-imobiliarios/${ticker}`
+	const ativo = await getTipoFII(ticker)
+
+	// usa o caminho retornado pela busca, já apontando para a página do tipo correto
+	const caminho = ativo.url.startsWith('/') ? ativo.url : `/${ativo.url}`
+	const url = `https://statusinvest.com.br${caminho}`
 
 	const response = await axios.get(url, {
 		responseType: 'arraybuffer',
@@ -34,33 +75,34 @@ export async function getFiiDataStatusInvest(ticker: string): Promise<FiiData> {
 			'User-Agent': 'Mozilla/5.0',
 		},
 	})
-
 	const html = iconv.decode(response.data, 'latin1')
 	const $ = cheerio.load(html)
 
 	// histórico de dividendos — primeira linha é o provento mais recente
 	const primeiraLinha = $('table tbody tr').first()
-	const cotacao = parseNumero($('.special').first().find('strong').text())
-	const [, nome] = $('h1.lh-4')
-		.first()
-		.text()
-		.trim()
-		.toUpperCase()
-		.split('-')
-		.map((s) => s.trim())
+	// cotação via scraping; se falhar, usa o preço que a própria busca já trouxe
+	const cotacaoScraping = parseNumero($('.special').first().find('strong').text())
+	const cotacao = cotacaoScraping > 0 ? cotacaoScraping : parseNumero(ativo.price)
+	const nome = ativo.name.toUpperCase()
+	const valorProvento = parseNumero(primeiraLinha.find('td').eq(3).text())
+	const dataComRaw = primeiraLinha.find('td').eq(1).text().trim()
+	const dataPagamentoRaw = primeiraLinha.find('td').eq(2).text().trim()
 
-	const proximoPagamento: ProximoPagamento = {
-		valor: parseNumero(primeiraLinha.find('td').eq(3).text()),
-		dataCom: primeiraLinha.find('td').eq(1).text().trim(),
-		dataPagamento: primeiraLinha.find('td').eq(2).text().trim(),
-	}
+	// tipos sem tabela de proventos (ex.: ETF) caem na primeira linha de outra tabela e
+	// trazem lixo ("0", "0,00"); só aceita quando há valor e datas no formato dd/mm/aaaa
+	const ehData = (texto: string) => /^\d{2}\/\d{2}\/\d{4}$/.test(texto)
+	const temProvento = valorProvento > 0 && ehData(dataComRaw) && ehData(dataPagamentoRaw)
+
+	const proximoPagamento: ProximoPagamento = temProvento
+		? { valor: valorProvento, dataCom: dataComRaw, dataPagamento: dataPagamentoRaw }
+		: { valor: 0, dataCom: '', dataPagamento: '' }
 
 	const dyMensal = cotacao > 0 ? (proximoPagamento.valor / cotacao) * 100 : 0
 	const dyAnual = dyMensal * 12
 
 	return {
-		ticker,
-		nome: nome ?? ticker,
+		ticker: ativo.code?.toUpperCase() || ticker,
+		nome,
 		cotacao,
 		proximoPagamento,
 		dyMensal: Number(dyMensal.toFixed(2)),
