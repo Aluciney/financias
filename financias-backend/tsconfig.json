@@ -13,6 +13,8 @@
     "skipLibCheck": true,
     "moduleResolution": "node16",
     "isolatedModules": true,
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./src/*"],
       "@root/*": ["./*"]
